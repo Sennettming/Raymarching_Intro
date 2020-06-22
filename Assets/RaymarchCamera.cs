@@ -2,23 +2,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(Camera))]
 [ExecuteInEditMode]
 public class RaymarchCamera : MonoBehaviour
 {
     [SerializeField]// see in inspector for private variables
-    private Shader _shader;
+    private Shader rayShader;
 
-    public Material _rayMarchMaterial
+    public Material RayMarchMaterial
     {
         get
         { 
-            if (!_raymarchMat && _shader)
+            if (!_raymarchMat && rayShader)
             {
-                _raymarchMat = new Material(_shader);
+                _raymarchMat = new Material(rayShader);
                 _raymarchMat.hideFlags = HideFlags.HideAndDontSave; // not be disposed
             }
             return _raymarchMat;
@@ -41,21 +40,25 @@ public class RaymarchCamera : MonoBehaviour
     
     private Camera _cam;
 
+    public float _maxDistance = 5;
+    public Vector4 _sphere;
+    
     private void OnRenderImage(RenderTexture src, RenderTexture dest)// communicate with shader
     {
-        if (!_rayMarchMaterial)
+        if (!RayMarchMaterial)
         {
             Graphics.Blit(src, dest);
             return;
         }
-        _rayMarchMaterial.SetMatrix("_CamFrustum", CamFrustum(_camera));
-        _rayMarchMaterial.SetMatrix("_CamToWorld", _camera.cameraToWorldMatrix);
-        _rayMarchMaterial.SetVector("_CamWorldSpace", _camera.transform.position);
-
+        RayMarchMaterial.SetMatrix("_CamFrustum", CamFrustum(_camera));
+        RayMarchMaterial.SetMatrix("_CamToWorld", _camera.cameraToWorldMatrix);
+        RayMarchMaterial.SetFloat("_maxdistance", _maxDistance);
+        RayMarchMaterial.SetVector("_sphere1", _sphere);
+        
         RenderTexture.active = dest;
         GL.PushMatrix();
         GL.LoadOrtho();
-        _rayMarchMaterial.SetPass(0);
+        RayMarchMaterial.SetPass(0);
         GL.Begin(GL.QUADS);
         
         //BL
