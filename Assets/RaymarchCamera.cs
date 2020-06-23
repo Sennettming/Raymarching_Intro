@@ -4,13 +4,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+// #pragma warning disable 0649
+
 [RequireComponent(typeof(Camera))]
 [ExecuteInEditMode]
-public class RaymarchCamera : MonoBehaviour
+public class RaymarchCamera : SceneViewFilter
 {
     [SerializeField]// see in inspector for private variables
-    private Shader rayShader;
-
+    private Shader rayShader = default;
+    
     public Material RayMarchMaterial
     {
         get
@@ -39,9 +41,10 @@ public class RaymarchCamera : MonoBehaviour
     }
     
     private Camera _cam;
-
+ 
     public float _maxDistance = 5;
-    public Vector4 _sphere;
+    public Vector4 _sphere = new Vector4(0,0,0,2);
+    public int sampleCount = 128;
     
     private void OnRenderImage(RenderTexture src, RenderTexture dest)// communicate with shader
     {
@@ -54,8 +57,10 @@ public class RaymarchCamera : MonoBehaviour
         RayMarchMaterial.SetMatrix("_CamToWorld", _camera.cameraToWorldMatrix);
         RayMarchMaterial.SetFloat("_maxdistance", _maxDistance);
         RayMarchMaterial.SetVector("_sphere1", _sphere);
+        RayMarchMaterial.SetInt("_sampleCount", sampleCount);
         
         RenderTexture.active = dest;
+        RayMarchMaterial.SetTexture("_mainTex", src);
         GL.PushMatrix();
         GL.LoadOrtho();
         RayMarchMaterial.SetPass(0);
